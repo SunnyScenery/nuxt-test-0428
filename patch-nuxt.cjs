@@ -195,5 +195,5 @@ import("./server/index.mjs").catch((err) => {
 fs.writeFileSync(indexPath, shimSource);
 console.log(
   `[patch-nuxt] Rewrote ${indexPath} with early-bind shim ` +
-    `(public=${PUBLIC_HOST}:<port>, nitro=${NITRO_INTERNAL_HOST}:${NITRO_INTERNAL_PORT}).`,
+    `(nitro=${NITRO_INTERNAL_HOST}:${NITRO_INTERNAL_PORT}).`,
 );
