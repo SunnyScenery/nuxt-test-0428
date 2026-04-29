@@ -150,28 +150,23 @@ shim.listen(PUBLIC_PORT, PUBLIC_HOST, () => {
 });
 
 // ----- 3. Poll Nitro on the sibling port to flip nitroReady as soon as
-//         it's listening. Independent of incoming traffic. -----
+//         it's listening. Raw TCP connect (no HTTP request) — we don't
+//         want to hit Nitro's handler before its ALS is seeded. -----
 function pollNitroReady() {
-  const probe = http.request(
-    {
-      host: NITRO_INTERNAL_HOST,
-      port: NITRO_INTERNAL_PORT,
-      method: "HEAD",
-      path: "/",
-      timeout: 500,
-    },
-    (ures) => {
-      ures.resume();
+  const net = require("net");
+  const sock = net.createConnection(
+    { host: NITRO_INTERNAL_HOST, port: NITRO_INTERNAL_PORT, timeout: 500 },
+    () => {
+      sock.end();
       nitroReady = true;
       console.log("[nuxt-shim] Nitro ready; forwarding traffic.");
     },
   );
-  probe.on("error", () => setTimeout(pollNitroReady, 100));
-  probe.on("timeout", () => {
-    probe.destroy();
+  sock.on("error", () => setTimeout(pollNitroReady, 100));
+  sock.on("timeout", () => {
+    sock.destroy();
     setTimeout(pollNitroReady, 100);
   });
-  probe.end();
 }
 pollNitroReady();
 
